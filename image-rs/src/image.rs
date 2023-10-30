@@ -240,7 +240,10 @@ impl ImageClient {
             &auth,
             self.config.max_concurrent_download,
         )?;
+
+        println!("CSG-M4GIC: B3G1N: Pull Manifest ({:?})", image_url);
         let (image_manifest, image_digest, image_config) = client.pull_manifest().await?;
+        println!("CSG-M4GIC: END: Pull Manifest ({:?})", image_url);
 
         let id = image_manifest.config.digest.clone();
 
@@ -304,6 +307,7 @@ impl ImageClient {
 
         #[cfg(feature = "signature")]
         if self.config.security_validate {
+            println!("CSG-M4GIC: B3G1N: Signature Validation ({:?})", image_url);
             crate::signature::allows_image(
                 image_url,
                 &image_digest,
@@ -312,6 +316,7 @@ impl ImageClient {
             )
             .await
             .map_err(|e| anyhow!("Security validate failed: {:?}", e))?;
+            println!("CSG-M4GIC: END: Signature Validation ({:?})", image_url);
         }
 
         let (mut image_data, unique_layers, unique_diff_ids) = create_image_meta(
@@ -323,6 +328,7 @@ impl ImageClient {
         )?;
 
         let unique_layers_len = unique_layers.len();
+        println!("CSG-M4GIC: B3G1N: Pull Layers ({:?})", image_url);
         let layer_metas = client
             .async_pull_layers(
                 unique_layers,
@@ -331,6 +337,7 @@ impl ImageClient {
                 self.meta_store.clone(),
             )
             .await?;
+        println!("CSG-M4GIC: END: Pull Layers ({:?})", image_url);
 
         image_data.layer_metas = layer_metas;
         let layer_db: HashMap<String, LayerMeta> = image_data
